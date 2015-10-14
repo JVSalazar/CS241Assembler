@@ -40,55 +40,54 @@ int main(int argc, char* argv[]){
     // Counts number of lines being inputted
     int numLines = 0;
 
+    // Vector that counts number of lables in a specific line nubmer
+    vector<int> numLabels;
+
+
+    // Reads in input and counts number of labels per line
+    int lineCount = 0;
     while(getline(cin, line)) {
       if (line != "") {
         tokLines.push_back(lexer.scan(line));
         numLines++;
+
+        numLabels.push_back(0);
+        bool lineNonNull = false;
+        vector<Token*>::iterator itl;
+        for(itl = (tokLines.begin() + numLines - 1)->begin(); itl != (tokLines.begin() + numLines - 1)->end(); ++itl){
+          int tokenCheck = (*itl)->getKind();
+
+          // Label variables
+          string rawLabel; // stores raw label as string if first token is a label
+          int labLen = 0; // stores raw label length
+          string label; // stores label as string without colon
+
+          if (tokenCheck == LABEL) {
+            rawLabel = (*itl)->getLexeme();
+            labLen = rawLabel.size();
+            label = rawLabel.substr(0, labLen - 1);
+            // Takes care of duplicate labels
+            if (labels.find(label) == labels.end()) {
+              labels[label] = nonNullLines;
+              numLabels[lineCount]++; // Increments number of lables per line
+            }
+            else {
+              cerr << "ERROR: duplicate label" << endl;
+              return 1;
+            }
+          }
+          // Increments non-null lines
+          if (!lineNonNull && (tokenCheck != LABEL)) {
+            nonNullLines += 4;
+            lineNonNull = true;
+          }
+        }
+
+        lineCount++;
       }
     }
 
 
-    // Array that stores number of lables per line
-    int numLabels[numLines];
-
-
-    // Iterate through vector, finding labels
-    // Refactor this to do it in the while loop sometime buddy
-    int lineCount = 0; // Counts current line
-    vector<vector<Token*> >::iterator itl;
-    for(itl = tokLines.begin(); itl != tokLines.end(); ++itl){
-      numLabels[lineCount] = 0;
-      bool lineNonNull = false;
-      vector<Token*>::iterator itl2;
-      for(itl2 = itl->begin(); itl2 != itl->end(); ++itl2){
-        int tokenCheck = (*itl2)->getKind();
-        // Label variables
-        string rawLabel; // stores raw label as string if first token is a label
-        int labLen = 0; // stores raw label length
-        string label; // stores label as string without colon
-        if (tokenCheck == LABEL) {
-          rawLabel = (*itl2)->getLexeme();
-          labLen = rawLabel.size();
-          label = rawLabel.substr(0, labLen - 1);
-          // Takes care of duplicate labels
-          if (labels.find(label) == labels.end()) {
-            labels[label] = nonNullLines;
-            numLabels[lineCount]++; // Increments number of lables per line
-          }
-          else {
-            cerr << "ERROR: duplicate label" << endl;
-            return 1;
-          }
-        }
-        // Increments non-null lines
-        if (!lineNonNull && (tokenCheck != LABEL)) {
-          nonNullLines += 4;
-          lineNonNull = true;
-        }
-      }
-
-      lineCount++;
-    }
 
 
     // Processes remaining tokens after labels
@@ -191,6 +190,7 @@ int main(int argc, char* argv[]){
     }
   }
 
+// For printing out symbol table
 /*  for(map<string, int >::const_iterator it = labels.begin(); it != labels.end(); ++it) {
       cerr << it->first << " " << it->second << endl;
   }*/
